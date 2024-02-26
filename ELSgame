@@ -1,0 +1,127 @@
+using System;
+using System.Threading;
+using System.Collections.Generic;
+
+class TetrisGame
+{
+    private const int Width = 10;
+    private const int Height = 20;
+    private bool[,] grid = new bool[Height, Width];
+    private int currentX = Width / 2;
+    private int currentY = 0;
+    private bool isGameOver = false;
+
+    public void Start()
+    {
+        while (!isGameOver)
+        {
+            DrawGrid();
+            ProcessInput();
+            UpdateGame();
+            Thread.Sleep(500); // 控制方块下落的速度
+        }
+
+        Console.Clear();
+        Console.WriteLine("Game Over!");
+    }
+
+    private void DrawGrid()
+    {
+        Console.Clear();
+        for (int y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < Width; x++)
+            {
+                Console.Write(grid[y, x] ? "[]" : "  ");
+            }
+            Console.WriteLine();
+        }
+    }
+
+    private void ProcessInput()
+    {
+        if (Console.KeyAvailable)
+        {
+            var key = Console.ReadKey(true).Key;
+            switch (key)
+            {
+                case ConsoleKey.LeftArrow:
+                    if (currentX > 0) currentX--;
+                    break;
+                case ConsoleKey.RightArrow:
+                    if (currentX < Width - 1) currentX++;
+                    break;
+                case ConsoleKey.DownArrow:
+                    if (currentY < Height - 1) currentY++;
+                    break;
+            }
+        }
+    }
+
+    private void UpdateGame()
+    {
+        if (currentY < Height - 1 && !grid[currentY + 1, currentX])
+        {
+            grid[currentY, currentX] = false;
+            currentY++;
+            grid[currentY, currentX] = true;
+        }
+        else
+        {
+            CheckForCompleteLines();
+            currentX = Width / 2;
+            currentY = 0;
+            if (grid[currentY, currentX])
+            {
+                isGameOver = true;
+            }
+            else
+            {
+                grid[currentY, currentX] = true;
+            }
+        }
+    }
+
+    private void CheckForCompleteLines()
+    {
+        for (int y = Height - 1; y >= 0; y--)
+        {
+            bool isLineComplete = true;
+            for (int x = 0; x < Width; x++)
+            {
+                if (!grid[y, x])
+                {
+                    isLineComplete = false;
+                    break;
+                }
+            }
+
+            if (isLineComplete)
+            {
+                for (int yy = y; yy > 0; yy--)
+                {
+                    for (int x = 0; x < Width; x++)
+                    {
+                        grid[yy, x] = grid[yy - 1, x];
+                    }
+                }
+
+                for (int x = 0; x < Width; x++)
+                {
+                    grid[0, x] = false;
+                }
+
+                y++; // 因为整行都被消除了，所以需要重新检查这一行
+            }
+        }
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        TetrisGame game = new TetrisGame();
+        game.Start();
+    }
+}
